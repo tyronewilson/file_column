@@ -1,6 +1,7 @@
 # plugin init file for rails
 # this file will be picked up by rails automatically and
 # add the file_column extensions to rails
+RAILS_ROOT = Rails.root
 
 require 'file_column'
 require 'file_compat'
