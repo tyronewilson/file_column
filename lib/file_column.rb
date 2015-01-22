@@ -356,6 +356,13 @@ module FileColumn # :nodoc:
     def initialize(*args)
       super *args
       @dir = File.join(store_dir, relative_path_prefix)
+      # We could be creating a subdirectory inside a path that doesn't exist
+      # yet. E.g. 0099/0000 <- the first time we use an ID > 989999 (see 
+      # #relative_path_prefix)
+      # Create the directory if it isn't there:
+      unless File.directory?(@dir)
+        FileUtils.mkdir_p(@dir)
+      end
       @filename = @instance[@attr]
       @filename = nil if @filename.empty?
     end
@@ -405,7 +412,14 @@ module FileColumn # :nodoc:
 
     def relative_path_prefix
       raise RuntimeError.new("Trying to access file_column, but primary key got lost.") if @instance.id.to_s.empty?
-      @instance.id.to_s
+      #https://github.com/tekin/file_column/blob/master/lib/file_column.rb#L400
+      # Old tekin file_column approach is the one that was in use when prod
+      # generated most of its images - create a pair of subdirectories based on
+      # the ID, zero padded to 8 digits, 4 digits in each directory name
+      #
+      # e.g. 0004/4327/ if the ID is 44327
+      # 
+      File.join(*("%08d" % @instance.id).scan(/..../)) 
     end
   end
 
